@@ -220,6 +220,7 @@
         this.options            = $.extend( {}, defaults, options );
         this.polyfill           = this.options.polyfill;
         this.orientation        = this.$element[0].getAttribute('data-orientation') || this.options.orientation;
+        this.origin             = this.$element[0].getAttribute('data-origin') || this.options.origin;
         this.onInit             = this.options.onInit;
         this.onSlide            = this.options.onSlide;
         this.onSlideEnd         = this.options.onSlideEnd;
@@ -373,7 +374,7 @@
     };
 
     Plugin.prototype.setPosition = function(pos, triggerSlide) {
-        var value, newPos;
+        var value, newPos, minPos, maxPos;
 
         if (triggerSlide === undefined) {
             triggerSlide = true;
@@ -382,9 +383,20 @@
         // Snapping steps
         value = this.getValueFromPosition(this.cap(pos, 0, this.maxHandlePos));
         newPos = this.getPositionFromValue(value);
+        minPos = this.getPositionFromValue(this.min);
+        maxPos = this.getPositionFromValue(this.max);
 
         // Update ui
-        this.$fill[0].style[this.DIMENSION] = (newPos + this.grabPos) + 'px';
+        if (typeof this.origin !== 'undefined') {
+            var originPos = this.getPositionFromValue(this.origin);
+            var from = this.cap(newPos, minPos, originPos);
+            var to = this.cap(newPos, originPos, maxPos) + this.grabPos * 2;
+
+            this.$fill[0].style[this.DIRECTION_STYLE] = from + 'px';
+            this.$fill[0].style[this.DIMENSION] = (to - from) + 'px';
+        } else {
+            this.$fill[0].style[this.DIMENSION] = (newPos + this.grabPos) + 'px';
+        }
         this.$handle[0].style[this.DIRECTION_STYLE] = newPos + 'px';
         this.setValue(value);
 
